@@ -1,13 +1,15 @@
-# habitat_zoonoses
+# A consistent signature of habitat suitability on rodent zoonotic pathogen prevalence
 
-This project asks whether rodent populations living in better-quality habitat have different levels of infection with zoonotic viruses (Hantaviridae and Arenaviridae).
+### Gregory C. Milne, Gonzalo Albaladejo-Robles, Artur Trebski, David Simons, Harry Gordon, Ana Martinez-Checa, David W. Redding
 
-It combines serosurvey records with species distribution model outputs. Each record is the number of animals of one host species tested and found positive at a site, and the distribution models give each record's probability of occurrence. Probability of occurrence is split into two parts:
+This project asks whether rodent populations living in better-quality habitat have different prevalence of infection with zoonotic viruses (Hantaviridae and Arenaviridae).
 
-- a **within-species** part: how a population's habitat compares with its species' average;
-- a **between-species** part: the species' average.
+It combines serosurvey records with outputs from species distribution models. Each record is the number of animals of one host species tested and found positive at a site, and the distribution models give each record's probability of occurrence. Probability of occurrence is split into two parts:
 
-Seroprevalence is modelled on both parts with a Bayesian beta-binomial model, fitted with [INLA](https://www.r-inla.org/). The main quantity of interest is the within-species coefficient (`prob_occur_within`, written β<sub>within</sub> in the figures).
+- a **within-species** component: how a population's habitat compares with its species' average;
+- a **between-species** component: the species' average.
+
+Seroprevalence is modelled on both component with a Bayesian beta-binomial model, fitted with [INLA](https://www.r-inla.org/). The main quantity of interest is the within-species coefficient (`prob_occur_within`, written β<sub>within</sub> in the figures).
 
 ## Folder structure
 
