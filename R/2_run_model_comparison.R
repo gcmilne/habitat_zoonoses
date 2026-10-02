@@ -1,12 +1,12 @@
 ###############################################################################
-## run_model_comparison.R
+## 2_run_model_comparison.R
 ## -----------------------------------------------------------------------------
 ## Justification for the final model structure. This is the SLOW script
 ## (k-fold refitting); run it once to (re)generate the comparison tables that
 ## the lab book reads. Typical runtime ~20-30 min.
 ##
-##   source("R/prepare_data.R")
-##   source("R/run_model_comparison.R")        # runs on source
+##   source("R/1_prepare_data.R")
+##   source("R/2_run_model_comparison.R")        # runs on source
 ##
 ## It answers: does adding any optional term (REALM, climate smooths, human
 ## footprint, a host random slope, travel time) actually improve the model?
@@ -37,7 +37,7 @@ K_FOLDS   <- 10     # CV folds
 N_SAMPLE  <- 500    # posterior draws per fold for the predictive density
 REF_MODEL <- "Core + REALM"
 
-if (!exists("prepare_data")) source("R/prepare_data.R")
+if (!exists("prepare_data")) source("R/1_prepare_data.R")
 df_model <- prepare_data("data/df_modNDVI2.csv", verbose = FALSE)
 n_obs    <- nrow(df_model)
 ntrials  <- df_model$number_tested

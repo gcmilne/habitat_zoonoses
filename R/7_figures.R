@@ -14,7 +14,7 @@ theme_pub <- theme_classic(base_size = 12) +
 col_ref <- "#B2182B"; col_pt <- "#2166AC"
 
 # 3. Load & prepare data & model outputs ----
-source("R/prepare_data.R")
+source("R/1_prepare_data.R")
 df <- prepare_data("data/df_modNDVI2.csv", verbose = FALSE) # to get observed prevalence for plots
 obs_prev <- mean(df$number_positive/df$number_tested)
 

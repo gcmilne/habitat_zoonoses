@@ -13,7 +13,7 @@ suppressPackageStartupMessages({
 })
 
 # 2. Prepare data ----
-source("R/prepare_data.R")
+source("R/1_prepare_data.R")
 df <- prepare_data("data/df_modNDVI2.csv", verbose = FALSE)
 imp <- attr(df, "imputation_summary")
 

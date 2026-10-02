@@ -1,12 +1,12 @@
 ###############################################################################
-## run_logo_cv.R
+## 4_run_logo_cv.R
 ## -----------------------------------------------------------------------------
 ## Leave-one-group-out (LOGO) coefficient-stability checks + family stratification.
 ## SLOW (~30 min): refits the final model many times. Run once; the lab book
 ## reads the saved tables.
 ##
-##   source("R/prepare_data.R")
-##   source("R/run_logo_cv.R")
+##   source("R/1_prepare_data.R")
+##   source("R/4_run_logo_cv.R")
 ##
 ## (A) LOGO stability. For each grouping in {study, pathogen, realm}, drop one
 ##     level at a time, refit the final model on the rest, and record the
@@ -29,7 +29,7 @@ suppressPackageStartupMessages({
 })
 
 set.seed(42)
-if (!exists("prepare_data")) source("R/prepare_data.R")
+if (!exists("prepare_data")) source("R/1_prepare_data.R")
 df <- prepare_data("data/df_modNDVI2.csv", verbose = FALSE)
 
 dir_lg <- file.path("outputs", "logo_cv")

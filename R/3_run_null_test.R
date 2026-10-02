@@ -1,5 +1,5 @@
 ###############################################################################
-## run_null_test.R
+## 3_run_null_test.R
 ## -----------------------------------------------------------------------------
 ## PRIMARY INFERENTIAL TEST: within-species permutation (randomisation) null.
 ##
@@ -21,8 +21,8 @@
 ## summary + figure are written at the end. Set RESUME = TRUE to continue an
 ## interrupted run.
 ##
-##   source("R/prepare_data.R")
-##   source("R/run_null_test.R")
+##   source("R/1_prepare_data.R")
+##   source("R/3_run_null_test.R")
 ###############################################################################
 
 suppressPackageStartupMessages({
@@ -36,7 +36,7 @@ N_PERM <- 500          # number of permutations
 SAVE_EVERY <- 10       # write progress to disk every this many permutations
 RESUME <- TRUE         # continue from an existing perm_coefs.csv if present
 
-if (!exists("prepare_data")) source("R/prepare_data.R")
+if (!exists("prepare_data")) source("R/1_prepare_data.R")
 df <- prepare_data("data/df_modNDVI2.csv", verbose = FALSE)
 
 dir_nt <- file.path("outputs", "null_test")

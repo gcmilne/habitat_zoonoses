@@ -1,10 +1,10 @@
 ###############################################################################
-## prepare_data.R
+## 1_prepare_data.R
 ## -----------------------------------------------------------------------------
 ## Shared data-preparation step for the niche-position / seroprevalence analysis.
 ## Source this file, then call prepare_data() to obtain the modelling frame.
 ##
-##   source("R/prepare_data.R")
+##   source("R/1_prepare_data.R")
 ##   df <- prepare_data("data/df_modNDVI2.csv")
 ##
 ## What it does:
