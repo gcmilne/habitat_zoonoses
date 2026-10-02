@@ -91,8 +91,6 @@ p_cv <- ggplot(cvp, aes(x = delta_elpd_vs_ref, y = model)) +
   theme_pub
 
 ## v. Coefficient null distribution
-null_summary <- read.csv("outputs/null_test/null_test_summary.csv") # summary table of null permutation test
-null_coefs   <- read.csv("outputs/null_test/perm_coefs.csv") # null permutation test coefficients 
 null_coefs <- null_coefs$perm_coef
 obs_coef <- -0.1076454  # !!!! check why different between different figures !!!!
 
@@ -225,6 +223,7 @@ design <- "AAABB
            AAADD
            EEFFF
            EEFFF"
+
 wrap_plots(A = p_posteriors, 
            B = p_sampling, 
            C = p_month,
