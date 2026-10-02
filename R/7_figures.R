@@ -1,11 +1,36 @@
-#--------------------------------------#
-# Create multi-panel figure of results #
-#--------------------------------------#
+#------------------------------------------------------------------------------#
+# 7_figures.R
+#
+# Purpose: builds the main multi-panel results figure and the supplementary
+#          null-distribution figure from the saved outputs of scripts 2-5.
+#
+# Inputs:  data/df_modNDVI2.csv, via prepare_data() in R/1_prepare_data.R
+#          outputs/comparison/model_selection.csv, cv_logscore.csv   (script 2)
+#          outputs/null_test/null_test_summary.csv, perm_coefs.csv   (script 3)
+#          outputs/reference_coefficient.rds                         (script 4)
+#          outputs/logo_cv/logo_cv.csv, family_strata.csv            (script 4)
+#          outputs/nichepos_vs_seroprev.csv                          (script 5)
+#          outputs/fullmodel_fixed_marginal_posteriors.csv           (script 5)
+#          outputs/month_effect_response_scale.csv                   (script 5)
+#          outputs/samplingeffort_vs_seroprev.csv                    (script 5)
+#
+# Methods: 1. plot robustness checks: leave-one-group-out, family
+#             stratification, model comparison and the permutation null
+#          2. plot model effects: fixed-effect marginal posteriors (with
+#             zoomed insets), within-species suitability, month and sampling
+#             effort on the prevalence scale
+#          3. combine six panels (a-f) into one figure at 183 mm width
+#
+# Outputs: plots/results_multipanel.pdf / .png (main figure)
+#          plots/null_coefficient.png         (supplementary figure)
+#
+# Usage:   source("R/7_figures.R")   # run after scripts 2-5
+#------------------------------------------------------------------------------#
 
-# 1. Load packages ----
-pacman::p_load(dplyr, ggplot2, patchwork, ggridges)
+# 1. LOAD PACKAGES ----
+pacman::p_load(dplyr, ggplot2, patchwork, ggridges)   # installs any that are missing
 
-# 2. Set ggplot theme & colour palettes ----
+# 2. PLOT THEME AND COLOURS ----
 theme_pub <- theme_classic(base_size = 12) +
   theme(plot.title = element_text(face = "bold"), strip.background = element_blank(),
         strip.text = element_text(face = "bold"),
@@ -13,35 +38,38 @@ theme_pub <- theme_classic(base_size = 12) +
 
 col_ref <- "#B2182B"; col_pt <- "#2166AC"
 
-# 3. Load & prepare data & model outputs ----
-source("R/1_prepare_data.R")
-df <- prepare_data("data/df_modNDVI2.csv", verbose = FALSE) # to get observed prevalence for plots
-obs_prev <- mean(df$number_positive/df$number_tested)
+# 3. LOAD DATA AND MODEL OUTPUTS ----
 
-ref  <- readRDS("outputs/reference_coefficient.rds") # reference coefficient
-logo <- read.csv("outputs/logo_cv/logo_cv.csv") # Leave one group out
-fam  <- read.csv("outputs/logo_cv/family_strata.csv") # family level stratification
-sel  <- read.csv("outputs/comparison/model_selection.csv") # model selection
-cv   <- read.csv("outputs/comparison/cv_logscore.csv") # cross-validation on model selection
-null_summary <- read.csv("outputs/null_test/null_test_summary.csv") # summary table of null permutation test
-null_coefs   <- read.csv("outputs/null_test/perm_coefs.csv") # null permutation test coefficients 
-suit_vs_prev <- read.csv("outputs/nichepos_vs_seroprev.csv") # relationship btwn habitat suitability (standardised) and prevalence (on response scale)
-fixed_df <- read.csv("outputs/fullmodel_fixed_marginal_posteriors.csv") # fixed effect marginal posterior distributions
+## a. Observed data ----
+source("R/1_prepare_data.R")
+df <- prepare_data("data/df_modNDVI2.csv", verbose = FALSE)
+obs_prev <- mean(df$number_positive/df$number_tested)   # mean observed prevalence, used as a reference line
+
+## b. Model outputs ----
+ref  <- readRDS("outputs/reference_coefficient.rds")      # full-data within-species coefficient
+logo <- read.csv("outputs/logo_cv/logo_cv.csv")
+fam  <- read.csv("outputs/logo_cv/family_strata.csv")
+sel  <- read.csv("outputs/comparison/model_selection.csv")
+cv   <- read.csv("outputs/comparison/cv_logscore.csv")
+null_summary <- read.csv("outputs/null_test/null_test_summary.csv")
+null_coefs   <- read.csv("outputs/null_test/perm_coefs.csv")
+suit_vs_prev <- read.csv("outputs/nichepos_vs_seroprev.csv")
+fixed_df <- read.csv("outputs/fullmodel_fixed_marginal_posteriors.csv")
 month_resp <- read.csv("outputs/month_effect_response_scale.csv")
 sampling_effort <- read.csv("outputs/samplingeffort_vs_seroprev.csv")
 
-# 3. Plots ----
+# 4. ROBUSTNESS PANELS ----
 
-## i. LOGO ----
+## a. Leave-one-group-out ----
 p_logo <- logo %>%
-  group_by(grouping) %>% 
-  mutate(ord = rank(beta_within, ties.method = "first")) %>% 
+  group_by(grouping) %>%
+  mutate(ord = rank(beta_within, ties.method = "first")) %>%   # rank for y-axis order
   ungroup() %>%
   mutate(overlaps_zero = if_else(q975 >= 0, "Yes", "No"),
-         overlaps_zero = as.factor(overlaps_zero)) %>% 
+         overlaps_zero = as.factor(overlaps_zero)) %>%
   ggplot(aes(x = beta_within, y = ord, col = overlaps_zero)) +
   geom_vline(xintercept = 0, linetype = "dashed", linewidth = 0.4) +
-  geom_vline(xintercept = ref["mean"], colour = col_ref, linewidth = 0.6) +
+  geom_vline(xintercept = ref["mean"], colour = col_ref, linewidth = 0.6) +   # full-data estimate
   geom_errorbar(aes(xmin = q025, xmax = q975), width = .1, linewidth = .1) +
   geom_point(size = .2, alpha = .7) +
   facet_wrap(~grouping, scales = "free_y") +
@@ -49,8 +77,8 @@ p_logo <- logo %>%
   labs(x = bquote(beta[within] ~ "(one group held out)"), y = "Held-out level (ranked)", col = "Overlaps zero") +
   theme_pub + theme(axis.text.y = element_blank(), axis.ticks.y = element_blank())
 
-## ii. Family-level stratification ----
-p_fam <- fam %>% 
+## b. Pathogen-family stratification ----
+p_fam <- fam %>%
   mutate(overlaps_zero = if_else(q975 >= 0, "Yes", "No"),
          overlaps_zero = as.factor(overlaps_zero)) %>%
   ggplot(aes(x = beta_within, y = family, col = overlaps_zero)) +
@@ -62,23 +90,23 @@ p_fam <- fam %>%
   scale_color_manual(values = c("black", "lightgrey")) +
   theme_pub
 
-## iii. Model comparison ----
+## c. Model comparison coefficients ----
 REF_MODEL <- "Core + REALM"
 ref_beta <- sel$beta_within[sel$model == REF_MODEL]
 
-p_beta <- sel %>% 
+p_beta <- sel %>%
   mutate(overlaps_zero = if_else(beta_q975 >= 0, "Yes", "No"),
          overlaps_zero = as.factor(overlaps_zero)) %>%
   ggplot(aes(x = beta_within, y = reorder(model, beta_within), col = overlaps_zero)) +
   geom_vline(xintercept = 0, linetype = "dashed", linewidth = 0.4) +
-  geom_vline(xintercept = ref_beta, colour = col_ref, linewidth = 0.6) +
+  geom_vline(xintercept = ref_beta, colour = col_ref, linewidth = 0.6) +   # reference model estimate
   geom_errorbar(aes(xmin = beta_q025, xmax = beta_q975), width = .1) +
   geom_point(size = 2.4) +
-  labs(x = bquote(beta[within] ~ "(log-odds)"), y = NULL, col = "Overlaps zero") + 
+  labs(x = bquote(beta[within] ~ "(log-odds)"), y = NULL, col = "Overlaps zero") +
   scale_color_manual(values = c("black", "lightgrey")) +
   theme_pub
 
-## iV. Model comparison cross-validation ----
+## d. Model comparison cross-validation ----
 cvp <- cv %>% filter(model != REF_MODEL) %>%
   mutate(model = reorder(model, delta_elpd_vs_ref),
          lo = delta_elpd_vs_ref - 2 * se_diff, hi = delta_elpd_vs_ref + 2 * se_diff)
@@ -90,31 +118,32 @@ p_cv <- ggplot(cvp, aes(x = delta_elpd_vs_ref, y = model)) +
   labs(x = "Out-of-sample log-score difference vs Core + REALM (+/- 2 SE)", y = NULL, col = "Overlaps zero") +
   theme_pub
 
-## v. Coefficient null distribution
+## e. Coefficient null distribution ----
 null_coefs <- null_coefs$perm_coef
 obs_coef <- -0.1076454  # !!!! check why different between different figures !!!!
 
 p_null <- ggplot(data.frame(perm = null_coefs), aes(perm)) +
   geom_histogram(bins = 30, fill = "darkgrey", colour = "white") +
-  geom_vline(xintercept = obs_coef, colour = col_ref, linewidth = 1.1) +
-  geom_vline(xintercept = mean(null_coefs), colour = "black", linetype = "dashed") +
+  geom_vline(xintercept = obs_coef, colour = col_ref, linewidth = 1.1) +                  # observed
+  geom_vline(xintercept = mean(null_coefs), colour = "black", linetype = "dashed") +     # null mean
   labs(x = bquote(beta[within] ~ "null"), y = "Count") +
   theme_pub
 
-## vi. Relationship btwn habitat suitability & seroprevalence ----
-p_suit <- suit_vs_prev %>% 
+# 5. MODEL EFFECT PANELS ----
+
+## a. Within-species suitability vs seroprevalence ----
+p_suit <- suit_vs_prev %>%
   ggplot(aes(x = prob_occur_stnd, y = med_seroprev)) +
   geom_ribbon(aes(ymin = lo_seroprev, ymax = hi_seroprev), fill = RColorBrewer::brewer.pal(3, "PuOr")[c(1,3)][1], alpha = 0.6) +
   geom_line(colour = "black", linewidth = 1.1) +
-  geom_hline(yintercept = mean(obs_prev), linetype = "dashed", colour = "#B2182B") +
+  geom_hline(yintercept = obs_prev, linetype = "dashed", colour = "#B2182B") +   # mean observed prevalence
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   labs(x = "Within-species suitability",
        y = "Prevalence") +
   theme_pub
 
-## Fixed effect marginal posteriors ----
-
-# Define custom parameter labels
+## b. Fixed-effect marginal posteriors ----
+# Axis labels as Greek symbols
 par_labs <- c(
   "(Intercept)" = expression(alpha),
   "log_tested" = expression(beta[sampling]),
@@ -122,7 +151,7 @@ par_labs <- c(
   "prob_occur_between" = expression(beta[between])
 )
 
-# Prepare data
+# Slopes only, grouped by what they represent
 plot_df <- fixed_df %>%
   filter(parameter != "(Intercept)") %>%
   mutate(
@@ -136,12 +165,13 @@ plot_df <- fixed_df %>%
 cols <- c("Rodent ecology" = RColorBrewer::brewer.pal(3, "PuOr")[1],
           "Sampling bias"  = RColorBrewer::brewer.pal(3, "PuOr")[3])
 
+# Zoomed inset for one parameter: x-axis spans its 95% interval plus padding
 make_inset <- function(par, pad = 0.15, n_breaks = 4) {
   d <- filter(plot_df, parameter == par)
   rng <- c(unique(d$lower95), unique(d$upper95))
   w   <- diff(range(rng))
   xlim <- c(min(rng) - pad * w, max(rng) + pad * w)
-  
+
   ggplot(d, aes(x = x, y = parameter)) +
     geom_density_ridges(aes(fill = param_group), scale = 1, alpha = .8, col = NA) +
     geom_segment(aes(x = lower95, xend = upper95, y = parameter, yend = parameter), linewidth = 0.4) +
@@ -159,15 +189,16 @@ make_inset <- function(par, pad = 0.15, n_breaks = 4) {
           axis.text.x = element_text(margin = margin(t = 1)),
           panel.grid = element_blank(),
           plot.background = element_rect(fill = "white", colour = "grey30"),
-          plot.margin = margin(3, 3, 3, 3))   # even on all sides
+          plot.margin = margin(3, 3, 3, 3))
 }
 
-# Inset placement: y range is defined relative to each row's baseline,
-# since ridges extend upward from the row position
+# Inset position: x as a fraction of the axis maximum; y relative to each
+# row's baseline, since ridges extend upward from the row position
 x_max <- max(plot_df$x)
 ix <- c(0.35, 0.85) * x_max
 inset_y <- function(row, offset = -0.1, height = 1.0) c(row + offset, row + offset + height)
 
+# Ridges with 95% (thin) and 80% (thick) intervals and posterior mean (point)
 p_posteriors <- ggplot(plot_df, aes(x = x, y = parameter)) +
   geom_density_ridges(aes(fill = param_group), scale = 1, alpha = .8, col = NA) +
   geom_segment(aes(x = lower95, xend = upper95, y = parameter, yend = parameter),
@@ -184,6 +215,7 @@ p_posteriors <- ggplot(plot_df, aes(x = x, y = parameter)) +
   theme(legend.position = "top",
         legend.justification = "right",
         legend.direction = "horizontal") +
+  # Insets for the two narrow posteriors (rows 3 and 1 from the bottom)
   annotation_custom(ggplotGrob(make_inset("log_tested")),
                     xmin = ix[1], xmax = ix[2],
                     ymin = inset_y(3)[1], ymax = inset_y(3)[2]) +
@@ -191,8 +223,7 @@ p_posteriors <- ggplot(plot_df, aes(x = x, y = parameter)) +
                     xmin = ix[1], xmax = ix[2],
                     ymin = inset_y(1)[1], ymax = inset_y(1)[2])
 
-
-## Random month effect ----
+## c. Month effect ----
 p_month <- ggplot(month_resp, aes(month, med)) +
   geom_ribbon(aes(ymin = lo, ymax = hi), alpha = 0.6, fill = "lightgrey") +
   geom_line(colour = "black", linewidth = 1.1) +
@@ -201,7 +232,8 @@ p_month <- ggplot(month_resp, aes(month, med)) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   theme_pub
 
-## Sampling effort effect ----
+## d. Sampling effort effect ----
+# Records within the 1st-99th percentile of number tested, for the rug
 n_range <- quantile(df$number_tested, c(0.01, 0.99))
 df_subset <- df %>%
   filter(number_tested >= min (n_range) & number_tested <= n_range)
@@ -217,31 +249,29 @@ p_sampling <- ggplot(sampling_effort, aes(n_tested, med)) +
        y = "Prevalence") +
   theme_pub
 
-## Multi-panel ----
+# 6. MAIN MULTI-PANEL FIGURE ----
+
+## a. Combine panels ----
 design <- "AAABB
            AAACC
            AAADD
            EEFFF
            EEFFF"
 
-wrap_plots(A = p_posteriors, 
-           B = p_sampling, 
+wrap_plots(A = p_posteriors,
+           B = p_sampling,
            C = p_month,
            D = p_suit,
-           E = p_beta + theme(legend.position = "none"), 
-           F = p_logo + theme(legend.position = "none"), 
-           design = design) + 
+           E = p_beta + theme(legend.position = "none"),
+           F = p_logo + theme(legend.position = "none"),
+           design = design) +
   plot_annotation(tag_levels = 'a', tag_suffix = "")
 
-# Nat Eco Evo double column width figure
+## b. Save ----
+# Nature Ecology & Evolution double-column width (183 mm)
 ggsave("plots/results_multipanel.pdf", device = cairo_pdf, width = 18.3, height = 18.3, units = "cm")
 ggsave("plots/results_multipanel.png", bg = "white", dpi = 1000, width = 18.3, height = 18.3, units = "cm")
 
-
-### Supplementary
-
-# Null distribution figure
+# 7. SUPPLEMENTARY FIGURE ----
 p_null
 ggsave("plots/null_coefficient.png", bg = "white", dpi = 600, height = 4, width = 4, units = "in")
-
-
