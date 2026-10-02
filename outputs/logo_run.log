@@ -1,0 +1,26 @@
+Warning message:
+package 'ggplot2' was built under R version 4.5.2 
+Full-data within coefficient: -0.1049 [-0.1995, -0.0100]
+LOGO over Study (138 levels) ...
+LOGO over Pathogen (42 levels) ...
+LOGO over Realm (5 levels) ...
+systemfonts and textshaping have been compiled with different versions of Freetype. Because of this, textshaping will not use the font cache provided by systemfontsWarning message:
+`geom_errorbarh()` was deprecated in ggplot2 4.0.0.
+ℹ Please use the `orientation` argument of `geom_errorbar()` instead. 
+`height` was translated to `width`.
+`height` was translated to `width`.
+
+==== LOGO summary ====
+# A tibble: 3 × 6
+  grouping n_levels beta_min beta_max n_sign_flip n_ci_excludes_0
+  <chr>       <int>    <dbl>    <dbl>       <int>           <int>
+1 Pathogen       42   -0.147  -0.0780           0              39
+2 Realm           5   -0.157  -0.103            0               4
+3 Study         138   -0.143  -0.0883           0             133
+
+==== Family stratification ====
+       family n_records beta_within       q025         q975
+ Arenaviridae       574 -0.31559146 -0.6388508 -0.029789733
+ Hantaviridae      2582 -0.09725966 -0.1970057  0.003129561
+
+DONE. LOGO outputs under C:\Users\a-davir\OneDrive - Natural History Museum\niche_centrality\handover\outputs\logo_cv
