@@ -2,16 +2,34 @@
 
 ### Gregory C. Milne, Gonzalo Albaladejo-Robles, Artur Trebski, David Simons, Harry Gordon, Ana Martinez-Checa, David W. Redding
 
+## Repository overview
+
 This project asks whether rodent populations living in better-quality habitat have different prevalence of infection with zoonotic viruses (Hantaviridae and Arenaviridae).
 
-It combines serosurvey records with outputs from species distribution models. Each record is the number of animals of one host species tested and found positive at a site, and the distribution models give each record's probability of occurrence. Probability of occurrence is split into two parts:
+It combines serosurvey records with outputs from species distribution models (SDMs). Each record is the number of animals of one host species tested and found positive at a site, and the distribution models give each record's probability of occurrence. Probability of occurrence is split into two parts:
 
 - a **within-species** component: how a population's habitat compares with its species' average;
 - a **between-species** component: the species' average.
 
 Seroprevalence is modelled on both component with a Bayesian beta-binomial model, fitted with [INLA](https://www.r-inla.org/). The main quantity of interest is the within-species coefficient (`prob_occur_within`, written β<sub>within</sub> in the figures).
 
-## Folder structure
+## Relation to related repositories
+
+This repository includes analyses from after SDMs are developed and fit (i.e. only the prevalence model analyses). The previous data cleaning and SDM work can be found here: https://github.com/BioDivHealth/Disease-prevalence-NicheCentralityTheory. 
+
+Specifically, the cleaning/filtering is in `2.1_data_clean_standardize.R` of this repo (https://github.com/BioDivHealth/Disease-prevalence-NicheCentralityTheory/blob/artur/code/2.1_data_clean_standardize.R). Here, the ArHa host and pathogen metadata were joined to the SDM estimates and filtered/cleaned by:
+- Removing records missing tested or positive counts, host/pathogen family, assay information, or any of the six niche variables.
+- Excluding records with zero individuals tested and kept coordinate resolutions of site, village, town, city or ADM3.
+- Grouping assays into serology and culture/molecular, then retained host-family × pathogen-family × assay combinations with at least 20 records.
+- Aggregating records sharing the same host, pathogen, coordinates, sampling interval and niche covariates, summing tested, positive, negative and inconclusive counts.
+- Retaining host species with at least 15 aggregated observations.
+- Replacing exact-zero suitability values with very small reproducible positive values, then applied ordered-quantile normalisation to the six niche variables.
+
+The temporal processing is in `2.1a_temporal_data.R` (https://github.com/BioDivHealth/Disease-prevalence-NicheCentralityTheory/blob/artur/code/2.1a_temporal_data.R). Here, sampling windows shorter than 370 days were kept, thereafter the rule of a minimum of 15 observations per host species was reapplied, the sampling midpoint and seasonal variables were calculated, and data were joined to MODIS mid-green-up dates using sites defined by coordinates rounded to three decimal places. These were used to calculate the number of days between green-up and sampling.
+
+The species occurrence data acquisition and cleaning can be found in this other repository, too, as can the development and fitting of SDMs, which provide the habitat suitability estimates used in this current repository.
+
+## Folder structure of this repository
 
 ```
 habitat_zoonoses/
